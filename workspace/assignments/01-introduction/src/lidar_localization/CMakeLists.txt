@@ -23,6 +23,7 @@ set(ALL_TARGET_LIBRARIES "")
 include(cmake/glog.cmake)
 include(cmake/PCL.cmake)
 include(cmake/geographic.cmake)
+include(cmake/gflags.cmake)
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
@@ -33,6 +34,8 @@ file(GLOB_RECURSE ALL_SRCS "*.cpp")
 file(GLOB_RECURSE NODE_SRCS "src/*_node.cpp")
 
 list(REMOVE_ITEM ALL_SRCS ${NODE_SRCS})
+
+# find_package(gflags REQUIRED)
 
 add_executable(hello_kitti_node src/hello_kitti_node.cpp ${ALL_SRCS})
 target_link_libraries(hello_kitti_node ${catkin_LIBRARIES} ${ALL_TARGET_LIBRARIES})

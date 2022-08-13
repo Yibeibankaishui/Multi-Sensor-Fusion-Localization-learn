@@ -34,6 +34,7 @@ include(cmake/geographic.cmake)
 include(cmake/glog.cmake)
 include(cmake/YAML.cmake)
 include(cmake/PCL.cmake)
+include(cmake/gflags.cmake)
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
