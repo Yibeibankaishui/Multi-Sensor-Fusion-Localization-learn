@@ -23,6 +23,7 @@ FrontEnd::FrontEnd()
 }
 
 bool FrontEnd::InitWithConfig() {
+    // read yaml for parameters
     std::string config_file_path = WORK_SPACE_PATH + "/config/front_end/config.yaml";
     YAML::Node config_node = YAML::LoadFile(config_file_path);
 

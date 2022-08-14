@@ -125,6 +125,7 @@ size_t ICPSVDRegistration::GetCorrespondence(
     return num_corr;
 }
 
+// 已经有关联点，求变换关系
 void ICPSVDRegistration::GetTransform(
     const std::vector<Eigen::Vector3f> &xs,
     const std::vector<Eigen::Vector3f> &ys,
@@ -133,14 +134,45 @@ void ICPSVDRegistration::GetTransform(
     const size_t N = xs.size();
 
     // TODO: find centroids of mu_x and mu_y:
+    Eigen::Vector3f mu_x, mu_y;
+    Eigen::Vector3f sum_x, sum_y;
+
+    int N = xs.size();
+    for (int i = 0; i < N; i++) {
+        sum_x += xs[i];
+        sum_y += ys[i];
+    }
+    mu_x = sum_x / N;
+    mu_y = sum_y / N;
 
     // TODO: build H:
+    std::vector<Eigen::Vector3f> Xs;
+    std::vector<Eigen::Vector3f> Ys;
+    for (int i = 0; i < N; i++) {
+        Xs[i] = xs[i] - mu_x;
+        Ys[i] = ys[i] - mu_y;
+    }
 
+    Eigen::Matrix3d H = Eigen::Matrix3d::Zero();
+    for (int i = 0; i < N; i++) {
+        H +=  Xs[i] * Ys[i].transpose();
+    }
     // TODO: solve R:
+    Eigen::JacobiSVD<Eigen::Matrix3d> svd(H, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    Eigen::Matrix3d U = svd.matrixU();
+    Eigen::Matrix3d V = svd.matrixV();
 
+    Eigen::Matrix3d R = U * (V.transpose());
+    if (R.determinant() < 0) {
+        R = -R;
+    }
     // TODO: solve t:
-
+    Eigen::Vector3d t = mu_x - R * mu_y;
     // TODO: set output:
+    transformation_.setZero();
+    transformation_.block<3,3>(0,0) = R;
+    transformation_.block<3,1>(0,3) = t;
+    transformation_(3,3) = 1;
 }
 
 bool ICPSVDRegistration::IsSignificant(
