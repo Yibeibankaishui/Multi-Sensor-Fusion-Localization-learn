@@ -120,6 +120,7 @@ bool Matching::InitGlobalMap() {
     return true;
 }
 
+// 根据(x,y,z)设置局部地图原点
 bool Matching::ResetLocalMap(float x, float y, float z) {
     std::vector<float> origin = {x, y, z};
 
@@ -179,6 +180,7 @@ bool Matching::Update(const CloudData& cloud_data, Eigen::Matrix4f& cloud_pose) 
             continue;
         }
             
+        // 如果距离box边界小于50m就重置局部地图
         ResetLocalMap(cloud_pose(0,3), cloud_pose(1,3), cloud_pose(2,3));
         break;
     }
@@ -187,6 +189,7 @@ bool Matching::Update(const CloudData& cloud_data, Eigen::Matrix4f& cloud_pose) 
 }
 
 // TODO: understand this function
+// 根据gnss设置pose
 bool Matching::SetGNSSPose(const Eigen::Matrix4f& gnss_pose) {
     static int gnss_cnt = 0;
 
@@ -209,6 +212,7 @@ bool Matching::SetGNSSPose(const Eigen::Matrix4f& gnss_pose) {
  * @return true if success otherwise false
  */
 // TODO: understand this function
+// 用scan context回环检测设置pose
 bool Matching::SetScanContextPose(const CloudData& init_scan) {
     // get init pose proposal using scan context match:
     Eigen::Matrix4f init_pose =  Eigen::Matrix4f::Identity();

@@ -43,6 +43,7 @@ bool MatchingFlow::Run() {
 
     while(HasData()) {
         if (!ValidData()) {
+            // validate data 并且获得 current data
             LOG(INFO) << "Invalid data. Skip matching" << std::endl;
             continue;
         }
@@ -111,6 +112,17 @@ bool MatchingFlow::UpdateMatching() {
         // Hints: You can use SetGNSSPose & SetScanContextPose from matching.hpp
         //
 
+        // GNSS
+        // 之前ValiData已经获得了 
+        // PoseData --> Eigen::Matrix4f
+        if (matching_ptr_->SetGNSSPose(current_gnss_data_.pose)) {
+            matching_ptr_->SetInited();
+        }
+        // Scan context
+        
+        if (matching_ptr_->SetScanContextPose(current_cloud_data_)) {
+            matching_ptr_->SetInited();
+        }
         // naive implementation:
         Eigen::Matrix4f init_pose = Eigen::Matrix4f::Identity();
         

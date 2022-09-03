@@ -70,6 +70,7 @@ ScanContextManager::ScanContextManager(const YAML::Node& node) {
     state_.index_.data_.key_frame_.clear();
 }
 
+// 从点云得到scancontext，再得到ring key存入缓存
 void ScanContextManager::Update(
     const CloudData &scan,
     const KeyFrame &key_frame

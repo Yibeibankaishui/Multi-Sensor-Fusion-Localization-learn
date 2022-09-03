@@ -154,6 +154,7 @@ bool BackEnd::SavePose(std::ofstream& ofs, const Eigen::Matrix4f& pose) {
     return true;
 }
 
+// 判断是否新关键帧
 bool BackEnd::MaybeNewKeyFrame(const CloudData& cloud_data, const PoseData& laser_odom, const PoseData& gnss_odom) {
     static Eigen::Matrix4f last_key_pose = laser_odom.pose;
 
@@ -212,8 +213,10 @@ bool BackEnd::AddNodeAndEdge(const PoseData& gnss_data) {
     new_key_frame_cnt_ ++;
 
     // add edge for new key frame:
+    // 添加激光里程计边
     int node_num = graph_optimizer_ptr_->GetNodeNum();
     if (node_num > 1) {
+        // 相对位姿 T_i^-1 * T_j
         Eigen::Matrix4f relative_pose = last_key_frame.pose.inverse() * current_key_frame_.pose;
         isometry.matrix() = relative_pose.cast<double>();
         graph_optimizer_ptr_->AddSe3Edge(node_num-2, node_num-1, isometry, graph_optimizer_config_.odom_edge_noise);
@@ -221,6 +224,7 @@ bool BackEnd::AddNodeAndEdge(const PoseData& gnss_data) {
     last_key_frame = current_key_frame_;
 
     // add prior for new key frame pose using GNSS/IMU estimation:
+    // 添加GNSS先验边
     if (graph_optimizer_config_.use_gnss) {
         Eigen::Vector3d xyz(
             static_cast<double>(gnss_data.pose(0,3)),
@@ -234,10 +238,12 @@ bool BackEnd::AddNodeAndEdge(const PoseData& gnss_data) {
     return true;
 }
 
+// 判断是否需要优化
 bool BackEnd::MaybeOptimized() {
     bool need_optimize = false; 
 
     if (
+        // 任何一个计数器到达
         new_key_frame_cnt_ >= graph_optimizer_config_.optimize_step_with_key_frame ||
         new_gnss_cnt_ >= graph_optimizer_config_.optimize_step_with_gnss ||
         new_loop_cnt_ >= graph_optimizer_config_.optimize_step_with_loop

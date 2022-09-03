@@ -68,6 +68,7 @@ void G2oGraphOptimizer::AddSe3Node(const Eigen::Isometry3d &pose, bool need_fix)
     g2o::VertexSE3 *vertex(new g2o::VertexSE3());
 
     vertex->setId(graph_ptr_->vertices().size());
+    // 设置初值
     vertex->setEstimate(pose);
     if (need_fix) {
         vertex->setFixed(true);

@@ -119,6 +119,7 @@ bool LoopClosing::Update(
 
     has_new_loop_pose_ = false;
 
+    // 更新scan context
     scan_context_manager_ptr_->Update(
         key_scan, key_gnss
     );
@@ -144,6 +145,7 @@ bool LoopClosing::DetectNearestKeyFrame(
     static int skip_num = loop_step_;
     
     // only perform loop closure detection for every skip_num key frames:
+    // 查找回环的最小时间差
     if (++skip_cnt < skip_num)
         return false;
 
@@ -207,6 +209,7 @@ bool LoopClosing::DetectNearestKeyFrame(
         return false;
 
     // update detection interval:
+    // 检测的等待时间，根据最短距离计算
     skip_cnt = 0;
     skip_num = static_cast<int>(key_frame_distance);
     if (key_frame_distance > detect_area_) {
@@ -276,6 +279,7 @@ bool LoopClosing::JointMap(
     
     // create local map:
     Eigen::Matrix4f pose_to_gnss = map_pose * all_key_frames_.at(key_frame_index).pose.inverse();
+    // 用的应该是局部地图，范围是当前+-extend_frame_num_
     for (int i = key_frame_index - extend_frame_num_; i < key_frame_index + extend_frame_num_; ++i) {
         // a. load back surrounding key scan:
         std::string file_path = key_frames_path_ + "/key_frame_" + std::to_string(all_key_frames_.at(i).index) + ".pcd";
@@ -286,6 +290,7 @@ bool LoopClosing::JointMap(
         Eigen::Matrix4f cloud_pose = pose_to_gnss * all_key_frames_.at(i).pose;
         pcl::transformPointCloud(*cloud_ptr, *cloud_ptr, cloud_pose);
 
+        // ？？点云加法？
         *map_cloud_ptr += *cloud_ptr;
     }
     // pre-process current map:
