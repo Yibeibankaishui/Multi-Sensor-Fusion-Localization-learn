@@ -34,6 +34,7 @@ int main(int argc, char** argv)
   MultiPosCalibration mp_calib;
     
   mp_calib.setInitStaticIntervalDuration(50.0);
+  // set initial parameter values
   mp_calib.setInitAccCalibration( init_acc_calib );
   mp_calib.setInitGyroCalibration( init_gyro_calib );  
   mp_calib.setGravityMagnitude(9.81744);
