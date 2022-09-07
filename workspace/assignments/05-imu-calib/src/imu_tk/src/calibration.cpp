@@ -106,10 +106,23 @@ template <typename _T1> struct MultiPosAccResidual
     return true;
   }
   
+  // TODO: evaluate 
+  bool Evaluate(double const* const* parameters,
+                double* residuals,
+                double** jacobians) const override {
+
+                
+    if (jacobians != nullptr && jacobians[0] != nullptr) {
+      jacobians[0][0] = ;
+    }
+  }
+
+
   static ceres::CostFunction* Create ( const _T1 &g_mag, const Eigen::Matrix< _T1, 3 , 1> &sample )
   {
     // which can be seen, using auto diff
     return ( new ceres::AutoDiffCostFunction< MultiPosAccResidual, 1, 9 > (
+              // _T1 is template _T2
                new MultiPosAccResidual<_T1>( g_mag, sample ) ) );
   }
   
@@ -264,10 +277,12 @@ bool MultiPosCalibration_<_T>::calibrateAcc(
     ceres::Problem problem;
     for( int i = 0; i < static_samples.size(); i++)
     {
+      // create cost function
       ceres::CostFunction* cost_function = MultiPosAccResidual<_T>::Create ( 
         g_mag_, static_samples[i].data() 
       );
-
+      
+      // TODO: change to use analytic function
       problem.AddResidualBlock ( 
         cost_function,           /* error fuction */
         NULL,                    /* squared loss */
