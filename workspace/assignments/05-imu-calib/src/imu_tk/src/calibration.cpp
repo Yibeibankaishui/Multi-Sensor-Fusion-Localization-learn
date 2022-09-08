@@ -106,18 +106,6 @@ template <typename _T1> struct MultiPosAccResidual
     return true;
   }
   
-  // TODO: evaluate 
-  bool Evaluate(double const* const* parameters,
-                double* residuals,
-                double** jacobians) const override {
-
-                
-    if (jacobians != nullptr && jacobians[0] != nullptr) {
-      jacobians[0][0] = ;
-    }
-  }
-
-
   static ceres::CostFunction* Create ( const _T1 &g_mag, const Eigen::Matrix< _T1, 3 , 1> &sample )
   {
     // which can be seen, using auto diff
@@ -129,6 +117,44 @@ template <typename _T1> struct MultiPosAccResidual
   const _T1 g_mag_;
   const Eigen::Matrix< _T1, 3 , 1> sample_;
 };
+
+
+// TODO: implement CostFunction
+template <typename _T1>
+class MultiPosAccCostFunction : public SizedCostFunction<1, 9> {
+  public:
+    MultiPosAccCostFunction(const _T1 & g_mag, const Eigen::Matrix<_T1, 3, 1> & sample): 
+    g_mag_(g_mag), sample_( sample) {}
+    virtual ~MultiPosAccCostFunction() {}
+
+    virtual bool Evaluate(double const * const * parameters, 
+                          double * residuals,
+                          double ** jacobians) const {
+      Eigen::Matrix<_T2, 3, 1> raw_samp( 
+      _T2(sample_(0)), 
+      _T2(sample_(1)), 
+      _T2(sample_(2)) 
+      );
+      CalibratedTriad_<_T2> calib_triad( 
+      _T2(0), _T2(0), _T2(0),
+      // mis_xz, mis_xy, mis_yx:
+      params[0], params[1], params[2],
+      //    s_x,    s_y,    s_z:
+      params[3], params[4], params[5], 
+      //    b_x,    b_y,    b_z: 
+      params[6], params[7], params[8] 
+      );
+      residuals[0] = 
+      if (jacobians != NULL && jacobians[0] != NULL) {
+
+      }
+      return true;
+    }
+
+  private:
+    const _T1 g_mag_;
+    const Eigen::Matrix<_T1, 3, 1> sample_;
+}
 
 template <typename _T1> struct MultiPosGyroResidual
 {
