@@ -127,26 +127,64 @@ class MultiPosAccCostFunction : public SizedCostFunction<1, 9> {
     g_mag_(g_mag), sample_( sample) {}
     virtual ~MultiPosAccCostFunction() {}
 
-    virtual bool Evaluate(double const * const * parameters, 
+    // template ???
+
+    virtual bool Evaluate(double const * const * params, 
                           double * residuals,
                           double ** jacobians) const {
-      Eigen::Matrix<_T2, 3, 1> raw_samp( 
-      _T2(sample_(0)), 
-      _T2(sample_(1)), 
-      _T2(sample_(2)) 
+      Eigen::Matrix<_T1, 3, 1> raw_samp( 
+      _T1(sample_(0)), 
+      _T1(sample_(1)), 
+      _T1(sample_(2)) 
       );
-      CalibratedTriad_<_T2> calib_triad( 
-      _T2(0), _T2(0), _T2(0),
+      CalibratedTriad_<_T1> calib_triad( 
+      _T1(0), _T1(0), _T1(0),
       // mis_xz, mis_xy, mis_yx:
-      params[0], params[1], params[2],
+      params[0][0], params[0][1], params[0][2],
       //    s_x,    s_y,    s_z:
-      params[3], params[4], params[5], 
+      params[0][3], params[0][4], params[0][5], 
       //    b_x,    b_y,    b_z: 
-      params[6], params[7], params[8] 
+      params[0][6], params[0][7], params[0][8] 
       );
-      residuals[0] = 
-      if (jacobians != NULL && jacobians[0] != NULL) {
+ 
+      // a = ( I - S_a ) * K_a' * ( A - b_a )
+      // raw_samp : A
+      // calib_samp : a
+      Eigen::Matrix< _T1, 3 , 1> calib_samp = calib_triad.unbiasNormalize( raw_samp );
 
+      // ax, ay, az         <-->    calib_samp(0), calib_samp(1), calib_samp(2)
+      // A_x, A_y, A_z      <-->    raw_samp(0), raw_samp(1), raw_samp(2)
+      // b_ax, b_ay, b_az   <-->    params[0][6], params[0][7], params[0][8]
+      // K_ax, K_ay, K_az   <-->    params[0][3], params[0][4], params[0][5]
+      // S_ayx, S_azx, S_azy<-->    -params[0][0], params[0][1], -params[0][2]
+      //                    <-->    misXZ(), misXY(), misYX()
+      _T1 a_x_2 = 2 * calib_samp(0);
+      _T1 a_y_2 = 2 * calib_samp(1);
+      _T1 a_z_2 = 2 * calib_samp(2);
+
+      _T1 A_minus_b_times_K_x = (raw_samp(0) - calib_triad.biasX()) * calib_triad.scaleX();
+      _T1 A_minus_b_times_K_y = (raw_samp(1) - calib_triad.biasY()) * calib_triad.scaleY();
+      _T1 A_minus_b_times_K_z = (raw_samp(2) - calib_triad.biasZ()) * calib_triad.scaleZ();
+ 
+      // error = || g || - || a ||
+      residuals[0] = _T1 (g_mag_) - calib_samp.norm();
+
+      if (jacobians != NULL && jacobians[0] != NULL) {
+        jacobians[0][0] = a_y_2 * A_minus_b_times_K_x;
+        jacobians[0][1] = a_z_2 * A_minus_b_times_K_x;
+        jacobians[0][2] = a_z_2 * A_minus_b_times_K_y;
+        jacobians[0][3] = a_x_2 * A_minus_b_times_K_x * calib_triad.scaleX()
+                          - a_y_2 * A_minus_b_times_K_x * calib_triad.scaleX() * calib_triad.misXZ()
+                          - a_z_2 * A_minus_b_times_K_x * calib_triad.scaleX() * calib_triad.misXY();
+        jacobians[0][4] = a_y_2 * A_minus_b_times_K_y * calib_triad.scaleY()
+                          - a_z_2 * A_minus_b_times_K_y * calib_triad.scaleY() * calib_triad.misYX();
+        jacobians[0][5] = a_z_2 * A_minus_b_times_K_z * calib_triad.scaleZ();
+        jacobians[0][6] = a_x_2 * calib_triad.scaleX()
+                          - a_z_2 * calib_triad.scaleX() * calib_triad.misXY();
+        jacobians[0][7] = - a_y_2 * calib_triad.scaleX() * calib_triad.misXZ()
+                          - a_z_2 * calib_triad.scaleY() * calib_triad.misYX();
+        jacobians[0][8] = a_y_2 * calib_triad.scaleY()
+                          + a_z_2 * calib_triad.scaleZ();
       }
       return true;
     }
@@ -304,9 +342,12 @@ bool MultiPosCalibration_<_T>::calibrateAcc(
     for( int i = 0; i < static_samples.size(); i++)
     {
       // create cost function
-      ceres::CostFunction* cost_function = MultiPosAccResidual<_T>::Create ( 
-        g_mag_, static_samples[i].data() 
-      );
+      // use analytic derivatives
+      ceres::CostFUnction * cost_function = new MultiPosAccCostFunction(g_mag_, static_samples[i].data());
+
+      // ceres::CostFunction* cost_function = MultiPosAccResidual<_T>::Create ( 
+      //   g_mag_, static_samples[i].data() 
+      // );
       
       // TODO: change to use analytic function
       problem.AddResidualBlock ( 
