@@ -120,10 +120,10 @@ template <typename _T1> struct MultiPosAccResidual
 
 
 // TODO: implement CostFunction
-template <typename _T1>
-class MultiPosAccCostFunction : public SizedCostFunction<1, 9> {
+// maybe not template !!!
+class MultiPosAccCostFunction : public ceres::SizedCostFunction <1, 9> {
   public:
-    MultiPosAccCostFunction(const _T1 & g_mag, const Eigen::Matrix<_T1, 3, 1> & sample): 
+    MultiPosAccCostFunction(const double & g_mag, const Eigen::Matrix<double, 3, 1> & sample): 
     g_mag_(g_mag), sample_( sample) {}
     virtual ~MultiPosAccCostFunction() {}
 
@@ -132,13 +132,13 @@ class MultiPosAccCostFunction : public SizedCostFunction<1, 9> {
     virtual bool Evaluate(double const * const * params, 
                           double * residuals,
                           double ** jacobians) const {
-      Eigen::Matrix<_T1, 3, 1> raw_samp( 
-      _T1(sample_(0)), 
-      _T1(sample_(1)), 
-      _T1(sample_(2)) 
+      Eigen::Matrix<double, 3, 1> raw_samp( 
+      double(sample_(0)), 
+      double(sample_(1)), 
+      double(sample_(2)) 
       );
-      CalibratedTriad_<_T1> calib_triad( 
-      _T1(0), _T1(0), _T1(0),
+      CalibratedTriad_<double> calib_triad( 
+      double(0), double(0), double(0),
       // mis_xz, mis_xy, mis_yx:
       params[0][0], params[0][1], params[0][2],
       //    s_x,    s_y,    s_z:
@@ -150,7 +150,7 @@ class MultiPosAccCostFunction : public SizedCostFunction<1, 9> {
       // a = ( I - S_a ) * K_a' * ( A - b_a )
       // raw_samp : A
       // calib_samp : a
-      Eigen::Matrix< _T1, 3 , 1> calib_samp = calib_triad.unbiasNormalize( raw_samp );
+      Eigen::Matrix< double, 3 , 1> calib_samp = calib_triad.unbiasNormalize( raw_samp );
 
       // ax, ay, az         <-->    calib_samp(0), calib_samp(1), calib_samp(2)
       // A_x, A_y, A_z      <-->    raw_samp(0), raw_samp(1), raw_samp(2)
@@ -158,16 +158,16 @@ class MultiPosAccCostFunction : public SizedCostFunction<1, 9> {
       // K_ax, K_ay, K_az   <-->    params[0][3], params[0][4], params[0][5]
       // S_ayx, S_azx, S_azy<-->    -params[0][0], params[0][1], -params[0][2]
       //                    <-->    misXZ(), misXY(), misYX()
-      _T1 a_x_2 = 2 * calib_samp(0);
-      _T1 a_y_2 = 2 * calib_samp(1);
-      _T1 a_z_2 = 2 * calib_samp(2);
+      double a_x_2 = 2 * calib_samp(0);
+      double a_y_2 = 2 * calib_samp(1);
+      double a_z_2 = 2 * calib_samp(2);
 
-      _T1 A_minus_b_times_K_x = (raw_samp(0) - calib_triad.biasX()) * calib_triad.scaleX();
-      _T1 A_minus_b_times_K_y = (raw_samp(1) - calib_triad.biasY()) * calib_triad.scaleY();
-      _T1 A_minus_b_times_K_z = (raw_samp(2) - calib_triad.biasZ()) * calib_triad.scaleZ();
+      double A_minus_b_times_K_x = (raw_samp(0) - calib_triad.biasX()) * calib_triad.scaleX();
+      double A_minus_b_times_K_y = (raw_samp(1) - calib_triad.biasY()) * calib_triad.scaleY();
+      double A_minus_b_times_K_z = (raw_samp(2) - calib_triad.biasZ()) * calib_triad.scaleZ();
  
       // error = || g || - || a ||
-      residuals[0] = _T1 (g_mag_) - calib_samp.norm();
+      residuals[0] = double (g_mag_) - calib_samp.norm();
 
       if (jacobians != NULL && jacobians[0] != NULL) {
         jacobians[0][0] = a_y_2 * A_minus_b_times_K_x;
@@ -190,9 +190,9 @@ class MultiPosAccCostFunction : public SizedCostFunction<1, 9> {
     }
 
   private:
-    const _T1 g_mag_;
-    const Eigen::Matrix<_T1, 3, 1> sample_;
-}
+    const double g_mag_;
+    const Eigen::Matrix<double, 3, 1> sample_;
+};
 
 template <typename _T1> struct MultiPosGyroResidual
 {
@@ -343,7 +343,10 @@ bool MultiPosCalibration_<_T>::calibrateAcc(
     {
       // create cost function
       // use analytic derivatives
-      ceres::CostFUnction * cost_function = new MultiPosAccCostFunction(g_mag_, static_samples[i].data());
+      Eigen::Matrix<_T, 3, 1> sample_data = static_samples[i].data();
+      // Eigen::Matrix<double, 3, 1> sample_data = static_samples[i].data().cast<double>();
+      ceres::CostFunction * cost_function = new MultiPosAccCostFunction(static_cast<double>(g_mag_),
+                                                                       sample_data.template cast<double>());
 
       // ceres::CostFunction* cost_function = MultiPosAccResidual<_T>::Create ( 
       //   g_mag_, static_samples[i].data() 
