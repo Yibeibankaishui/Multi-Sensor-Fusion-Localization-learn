@@ -54,6 +54,11 @@ class Activity {
         const Eigen::Vector3d &linear_acc,
         const Eigen::Matrix3d &R
     );
+
+    // bool GetDelta_t(const size_t index_curr, const size_t index_prev,
+    //     double &delta_t
+    // );
+
     /**
      * @brief  get angular delta
      * @param  index_curr, current imu measurement buffer index

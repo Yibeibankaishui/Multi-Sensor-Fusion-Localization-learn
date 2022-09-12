@@ -45,6 +45,7 @@ private:
     static Eigen::Matrix3d EulerAnglesToRotation(const Eigen::Vector3d &euler_angles);
     static Eigen::Vector3d EulerAngleRatesToBodyAngleRates(const Eigen::Vector3d &euler_angles, const Eigen::Vector3d &euler_angle_rates);
     
+private:    
     // node handler:
     ros::NodeHandle private_nh_;
 
