@@ -158,6 +158,7 @@ class MultiPosAccCostFunction : public SizedCostFunction<1, 9> {
       // K_ax, K_ay, K_az   <-->    params[0][3], params[0][4], params[0][5]
       // S_ayx, S_azx, S_azy<-->    -params[0][0], params[0][1], -params[0][2]
       //                    <-->    misXZ(), misXY(), misYX()
+      
       _T1 a_x_2 = 2 * calib_samp(0);
       _T1 a_y_2 = 2 * calib_samp(1);
       _T1 a_z_2 = 2 * calib_samp(2);
