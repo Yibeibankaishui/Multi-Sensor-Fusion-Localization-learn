@@ -28,6 +28,7 @@ Activity::Activity(void)
 
 void Activity::Init(void) {
     // parse IMU config:
+    // .param(): try to retrieve the parameter otherwise the default value will be used
     private_nh_.param("imu/device_name", imu_config_.device_name, std::string("GNSS_INS_SIM_IMU"));
     private_nh_.param("imu/topic_name", imu_config_.topic_name, std::string("/sim/sensor/imu"));
     private_nh_.param("imu/frame_id", imu_config_.frame_id, std::string("ENU"));
@@ -70,6 +71,7 @@ void Activity::Init(void) {
 
     // init publishers:
     pub_imu_ = private_nh_.advertise<sensor_msgs::Imu>(imu_config_.topic_name, 500);
+    // pub the ground truth
     pub_odom_ = private_nh_.advertise<nav_msgs::Odometry>(odom_config_.topic_name.ground_truth, 500);
 
     // init timestamp:

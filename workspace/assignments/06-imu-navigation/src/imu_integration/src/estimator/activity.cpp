@@ -126,14 +126,30 @@ bool Activity::UpdatePose(void) {
         // TODO: implement your estimation here
         //
         // get deltas:
-
+        size_t id_curr, id_prev;
+        Eigen::Vector3d angular_delta;
+        Eigen::Vector3d velocity_delta;
+        id_curr = imu_data_buff_.size() - 1;
+        id_prev = id_curr - 1;
+    
+        if ( !(GetAngularDelta(id_curr, id_prev, angular_delta)) ){
+            return false;
+        }
         // update orientation:
-
+        Eigen::Matrix3d R_curr;
+        Eigen::Matrix3d R_prev;
+        UpdateOrientation(angular_delta, R_curr, R_prev);
         // get velocity delta:
-
+        double delta_t;
+        if ( !(GetVelocityDelta(id_curr, id_prev, R_curr, R_prev, delta_t, velocity_delta)) ){
+            return false;
+        }
         // update position:
-
+        
+        // GetDelta_t(id_curr, id_prev, delta_t);
+        UpdatePosition(delta_t, velocity_delta);
         // move forward -- 
+
         // NOTE: this is NOT fixed. you should update your buffer according to the method of your choice:
         imu_data_buff_.pop_front();
     }
@@ -193,6 +209,25 @@ inline Eigen::Vector3d Activity::GetUnbiasedLinearAcc(
 ) {
     return R*(linear_acc - linear_acc_bias_) - G_;
 }
+
+//  bool Activity::GetDelta_t(const size_t index_curr, const size_t index_prev,
+//         double &delta_t
+// ) {
+
+//     if (
+//         index_curr <= index_prev ||
+//         imu_data_buff_.size() <= index_curr
+//     ) {
+//         return false;
+//     }
+
+//     const IMUData &imu_data_curr = imu_data_buff_.at(index_curr);
+//     const IMUData &imu_data_prev = imu_data_buff_.at(index_prev);
+
+//     delta_t = imu_data_curr.time - imu_data_prev.time;
+
+//     return true;
+// }
 
 /**
  * @brief  get angular delta
@@ -287,6 +322,11 @@ void Activity::UpdateOrientation(
     // build delta q:
     double angular_delta_cos = cos(angular_delta_mag/2.0);
     double angular_delta_sin = sin(angular_delta_mag/2.0);
+    // \bold{q}_{b_{k-1}b_{k}} = 
+    // \begin{bmatrix} 
+    // \cos \frac{\phi}{2} 
+    // \frac{\bold \phi}{\phi} \sin \frac{\phi}{2}
+    // \end{bmatrix}
     Eigen::Quaterniond dq(
         angular_delta_cos, 
         angular_delta_sin*angular_delta_dir.x(), 
