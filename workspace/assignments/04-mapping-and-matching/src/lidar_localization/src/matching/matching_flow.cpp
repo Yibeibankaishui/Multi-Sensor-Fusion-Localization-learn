@@ -119,7 +119,6 @@ bool MatchingFlow::UpdateMatching() {
             matching_ptr_->SetInited();
         }
         // Scan context
-        
         if (matching_ptr_->SetScanContextPose(current_cloud_data_)) {
             matching_ptr_->SetInited();
         }
