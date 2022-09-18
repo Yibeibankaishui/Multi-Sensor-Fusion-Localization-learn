@@ -116,6 +116,7 @@ bool MatchingFlow::UpdateMatching() {
         // GNSS
         // 之前ValiData已经获得了 
         // PoseData --> Eigen::Matrix4f
+<<<<<<< HEAD
         // if (matching_ptr_->SetGNSSPose(current_gnss_data_.pose)) {
         //     matching_ptr_->SetInited();
         // }
@@ -124,6 +125,15 @@ bool MatchingFlow::UpdateMatching() {
         // if (matching_ptr_->SetScanContextPose(current_cloud_data_)) {
         //     matching_ptr_->SetInited();
         // }
+=======
+        if (matching_ptr_->SetGNSSPose(current_gnss_data_.pose)) {
+            matching_ptr_->SetInited();
+        }
+        // Scan context
+        if (matching_ptr_->SetScanContextPose(current_cloud_data_)) {
+            matching_ptr_->SetInited();
+        }
+>>>>>>> eabb9d9967ab867ff623b7e794abc0cc5b3520ca
         // naive implementation:
         Eigen::Matrix4f init_pose = Eigen::Matrix4f::Identity();
         

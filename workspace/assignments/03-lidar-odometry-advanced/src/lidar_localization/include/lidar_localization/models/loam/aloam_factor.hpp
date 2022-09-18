@@ -184,7 +184,7 @@ struct LidarEdgeFactor
 		return true;
 	}
 
-	// TODO: modify Create
+	// 
 	static ceres::CostFunction *Create(const Eigen::Vector3d curr_point_, const Eigen::Vector3d last_point_a_,
 									   const Eigen::Vector3d last_point_b_, const double s_)
 	{
@@ -232,7 +232,7 @@ struct LidarPlaneFactor
 		return true;
 	}
 
-	// TODO: modify Create
+	// 
 	static ceres::CostFunction *Create(const Eigen::Vector3d curr_point_, const Eigen::Vector3d last_point_j_,
 									   const Eigen::Vector3d last_point_l_, const Eigen::Vector3d last_point_m_,
 									   const double s_)
