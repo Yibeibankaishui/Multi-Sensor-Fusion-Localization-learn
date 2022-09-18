@@ -93,6 +93,7 @@ bool KITTIFilteringFlow::Run() {
         CorrectLocalization();
       }
 
+      // no measurement
       if (HasIMUData() && ValidIMUData()) {
         UpdateLocalization();
       }
