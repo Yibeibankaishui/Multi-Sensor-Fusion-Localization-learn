@@ -167,18 +167,20 @@ class MultiPosAccCostFunction : public ceres::SizedCostFunction <1, 9> {
       double A_minus_b_times_K_z = (raw_samp(2) - calib_triad.biasZ()) * calib_triad.scaleZ();
  
       // error = || g || - || a ||
-      residuals[0] = double (g_mag_) - calib_samp.norm();
+      residuals[0] = double (g_mag_) * double (g_mag_) - calib_samp.norm() * calib_samp.norm();
 
       if (jacobians != NULL && jacobians[0] != NULL) {
         jacobians[0][0] = a_y_2 * A_minus_b_times_K_x;
         jacobians[0][1] = a_z_2 * A_minus_b_times_K_x;
         jacobians[0][2] = a_z_2 * A_minus_b_times_K_y;
+
         jacobians[0][3] = a_x_2 * A_minus_b_times_K_x * calib_triad.scaleX()
                           - a_y_2 * A_minus_b_times_K_x * calib_triad.scaleX() * calib_triad.misXZ()
                           - a_z_2 * A_minus_b_times_K_x * calib_triad.scaleX() * calib_triad.misXY();
         jacobians[0][4] = a_y_2 * A_minus_b_times_K_y * calib_triad.scaleY()
                           - a_z_2 * A_minus_b_times_K_y * calib_triad.scaleY() * calib_triad.misYX();
         jacobians[0][5] = a_z_2 * A_minus_b_times_K_z * calib_triad.scaleZ();
+        
         jacobians[0][6] = a_x_2 * calib_triad.scaleX()
                           - a_z_2 * calib_triad.scaleX() * calib_triad.misXY();
         jacobians[0][7] = - a_y_2 * calib_triad.scaleX() * calib_triad.misXZ()
