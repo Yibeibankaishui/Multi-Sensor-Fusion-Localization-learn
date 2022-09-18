@@ -158,16 +158,9 @@ class MultiPosAccCostFunction : public ceres::SizedCostFunction <1, 9> {
       // K_ax, K_ay, K_az   <-->    params[0][3], params[0][4], params[0][5]
       // S_ayx, S_azx, S_azy<-->    -params[0][0], params[0][1], -params[0][2]
       //                    <-->    misXZ(), misXY(), misYX()
-<<<<<<< HEAD
-      
-      _T1 a_x_2 = 2 * calib_samp(0);
-      _T1 a_y_2 = 2 * calib_samp(1);
-      _T1 a_z_2 = 2 * calib_samp(2);
-=======
       double a_x_2 = 2 * calib_samp(0);
       double a_y_2 = 2 * calib_samp(1);
       double a_z_2 = 2 * calib_samp(2);
->>>>>>> 3c286be7d1e4f66ad2af52fabee320eda4e4e881
 
       double A_minus_b_times_K_x = (raw_samp(0) - calib_triad.biasX()) * calib_triad.scaleX();
       double A_minus_b_times_K_y = (raw_samp(1) - calib_triad.biasY()) * calib_triad.scaleY();
@@ -177,20 +170,22 @@ class MultiPosAccCostFunction : public ceres::SizedCostFunction <1, 9> {
       residuals[0] = double (g_mag_) - calib_samp.norm();
 
       if (jacobians != NULL && jacobians[0] != NULL) {
-        jacobians[0][0] = a_y_2 * A_minus_b_times_K_x;
+        // TODO : need to test
+        jacobians[0][0] = - a_y_2 * A_minus_b_times_K_x;
         jacobians[0][1] = a_z_2 * A_minus_b_times_K_x;
-        jacobians[0][2] = a_z_2 * A_minus_b_times_K_y;
-        jacobians[0][3] = a_x_2 * A_minus_b_times_K_x * calib_triad.scaleX()
-                          - a_y_2 * A_minus_b_times_K_x * calib_triad.scaleX() * calib_triad.misXZ()
-                          - a_z_2 * A_minus_b_times_K_x * calib_triad.scaleX() * calib_triad.misXY();
-        jacobians[0][4] = a_y_2 * A_minus_b_times_K_y * calib_triad.scaleY()
-                          - a_z_2 * A_minus_b_times_K_y * calib_triad.scaleY() * calib_triad.misYX();
-        jacobians[0][5] = a_z_2 * A_minus_b_times_K_z * calib_triad.scaleZ();
+        jacobians[0][2] = - a_z_2 * A_minus_b_times_K_y;
+        jacobians[0][3] = - a_x_2 * (raw_samp(0) - calib_triad.biasX())
+                          - a_y_2 * (raw_samp(0) - calib_triad.biasX()) * calib_triad.misXZ()
+                          + a_z_2 * (raw_samp(0) - calib_triad.biasX()) * calib_triad.misXY();
+        jacobians[0][4] = - a_y_2 * (raw_samp(1) - calib_triad.biasY())
+                          - a_z_2 * (raw_samp(1) - calib_triad.biasY()) * calib_triad.misYZ();
+        jacobians[0][5] = - a_z_2 * (raw_samp(2) - calib_triad.biasZ()) ;
         jacobians[0][6] = a_x_2 * calib_triad.scaleX()
-                          - a_z_2 * calib_triad.scaleX() * calib_triad.misXY();
-        jacobians[0][7] = - a_y_2 * calib_triad.scaleX() * calib_triad.misXZ()
-                          - a_z_2 * calib_triad.scaleY() * calib_triad.misYX();
-        jacobians[0][8] = a_y_2 * calib_triad.scaleY()
+                          - a_z_2 * calib_triad.scaleX() * calib_triad.misXY()
+                          + a_y_2 * calib_triad.scaleX() * calib_triad.misXZ();
+        jacobians[0][7] = a_y_2 * calib_triad.scaleY() * 1
+                          + a_z_2 * calib_triad.scaleY() * calib_triad.misYZ();
+        jacobians[0][8] = 0
                           + a_z_2 * calib_triad.scaleZ();
       }
       return true;
