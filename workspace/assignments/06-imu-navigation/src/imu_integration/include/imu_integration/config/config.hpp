@@ -53,6 +53,7 @@ struct IMUConfig {
 struct OdomConfig {
     // general info:
     std::string frame_id;
+    std::string solve_method;
     struct {
         std::string ground_truth;
         std::string estimation;

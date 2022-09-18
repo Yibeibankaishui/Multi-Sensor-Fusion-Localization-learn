@@ -19,3 +19,6 @@ pose:
     topic_name: 
         ground_truth: /pose/ground_truth
         estimation: /pose/estimation
+
+# euler or mid
+solve_method: euler 
