@@ -20,6 +20,20 @@
 
 #include "glog/logging.h"
 
+// 反对称算符
+Eigen::Matrix3d skew(Eigen::Vector3d& mat_in){
+	Eigen::Matrix<double,3,3> skew_mat;
+    skew_mat.setZero();
+    skew_mat(0,1) = -mat_in(2);
+    skew_mat(0,2) =  mat_in(1);
+    skew_mat(1,2) = -mat_in(0);
+    skew_mat(1,0) =  mat_in(2);
+    skew_mat(2,0) = -mat_in(1);
+    skew_mat(2,1) =  mat_in(0);
+    return skew_mat;
+}
+
+
 namespace lidar_localization {
 
 ErrorStateKalmanFilter::ErrorStateKalmanFilter(const YAML::Node &node) {
@@ -485,8 +499,14 @@ void ErrorStateKalmanFilter::SetProcessEquation(const Eigen::Matrix3d &C_nb,
                                                 const Eigen::Vector3d &w_b) {
   // TODO: set process / system equation:
   // a. set process equation for delta vel:
-
+  F_.block<3, 3>(kIndexErrorVel, kIndexErrorOri) = - C_nb * skew(f_n);
+  F_.block<3, 3>(kIndexErrorVel, kIndexErrorAccel) = - C_nb;
+  
   // b. set process equation for delta ori:
+  F_.block<3, 3>(kIndexErrorOri, kIndexErrorOri) = - skew(w_b);
+
+  B_.block<3, 3>(kIndexErrorVel, kIndexNoiseAccel) = C_nb;
+  
 }
 
 /**
@@ -515,13 +535,23 @@ void ErrorStateKalmanFilter::UpdateProcessEquation(
 void ErrorStateKalmanFilter::UpdateErrorEstimation(
     const double &T, const Eigen::Vector3d &linear_acc_mid,
     const Eigen::Vector3d &angular_vel_mid) {
+  // ? what is these two ? ? ?
   static MatrixF F_1st;
   static MatrixF F_2nd;
   // TODO: update process equation:
-
+  UpdateProcessEquation(linear_acc_mid, angular_vel_mid);
   // TODO: get discretized process equations:
+  Eigen::MatrixXd I_15 = Eigen::MatrixXd::Identity(kDimState, kDimState);
+  F_1st = I_15 + F_ * T;
+
+  // F_2nd = B_;
+  // F_2nd.block<3, 3>(kIndexErrorVel, kIndexNoiseAccel) = ;
+  // F_2nd.block<3, 3>(kIndexErrorOri, kIndexNoiseGyro) = Eigen::Matrix3d::Identity() * ;
+  // F_2nd.block<3, 3>(kIndexErrorAccel, kIndexNoiseBiasAccel) = Eigen::Matrix3d::Identity() * ;
+  // F_2nd.block<3, 3>(kIndexErrorGyro, kIndexNoiseBiasGyro) = Eigen::Matrix3d::Identity() * ;
 
   // TODO: perform Kalman prediction
+  X_ = F_1st * X_;
 }
 
 /**
@@ -535,10 +565,12 @@ void ErrorStateKalmanFilter::CorrectErrorEstimationPose(
   //
   // TODO: set measurement:
   //
-
+  Y = ;
   // TODO: set measurement equation:
-
-  // TODO: set Kalman gain:              
+  G = ;
+  CPose_ = ;
+  // TODO: set Kalman gain:   
+  K_ = 
 }
 
 /**
