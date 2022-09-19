@@ -50,6 +50,7 @@ void IMUSubscriber::ParseData(
 
     // pipe all available measurements to output buffer:
     if (imu_data_.size() > 0) {
+        // append imu_data_ to imu_data
         imu_data.insert(imu_data.end(), imu_data_.begin(), imu_data_.end());
         imu_data_.clear();
     }
