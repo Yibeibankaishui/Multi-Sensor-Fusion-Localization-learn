@@ -35,6 +35,8 @@ private:
 
     ros::NodeHandle private_nh_;
 
+    std::string dir_path;
+
     ros::Subscriber sub_eva;
     ros::Subscriber sub_gt;
 
