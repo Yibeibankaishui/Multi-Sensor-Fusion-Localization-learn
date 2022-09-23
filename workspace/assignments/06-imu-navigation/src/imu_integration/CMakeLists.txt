@@ -187,6 +187,26 @@ target_link_libraries(generator_node
 )
 
 # TODO add evaluator
+file(GLOB RECURSE EVALUATOR_ACTIVITY_SRCS "src/evaluator/*.cpp")
+file(GLOB_RECURSE EVALUATOR_NODE_SRCS "src/evaluator/node.cpp")
+list(REMOVE_ITEM EVALUATOR_ACTIVITY_SRCS ${EVALUATOR_NODE_SRCS})
+
+add_library(evaluator_activity
+  ${EVALUATOR_ACTIVITY_SRCS}
+)
+target_link_libraries(evaluator_activity
+  utils
+  ${catkin_LIBRARIES}
+  ${ALL_TARGET_LIBRARIES}
+)
+
+add_executable(evaluator_node
+  ${EVALUATOR_NODE_SRCS}
+)
+target_link_libraries(evaluator_node
+  evaluator_activity
+  ${catkin_LIBRARIES}
+)
 
 
 ## Rename C++ executable without prefix
