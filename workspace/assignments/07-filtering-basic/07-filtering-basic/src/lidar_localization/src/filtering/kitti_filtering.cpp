@@ -15,6 +15,7 @@
 #include "lidar_localization/models/cloud_filter/voxel_filter.hpp"
 
 #include "lidar_localization/models/registration/ndt_registration.hpp"
+#include "lidar_localization/models/registration/icp_registration.hpp"
 
 #include "lidar_localization/models/kalman_filter/error_state_kalman_filter.hpp"
 
@@ -252,6 +253,10 @@ bool KITTIFiltering::InitRegistration(
   if (registration_method == "NDT") {
     registration_ptr =
         std::make_shared<NDTRegistration>(config_node[registration_method]);
+  } 
+  if (registration_method == "ICP") {
+    registration_ptr = 
+        std::make_shared<ICPRegistration>(config_node[registration_method]);   // TODO : add ICP
   } else {
     LOG(ERROR) << "Registration method " << registration_method
                << " NOT FOUND!";
