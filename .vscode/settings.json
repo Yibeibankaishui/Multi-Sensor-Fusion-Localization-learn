@@ -4,6 +4,11 @@
         "functional": "cpp",
         "string": "cpp",
         "unordered_map": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "algorithm": "cpp",
+        "bitset": "cpp",
+        "optional": "cpp",
+        "random": "cpp",
+        "memory": "cpp"
     }
 }

@@ -53,7 +53,7 @@ roslaunch imu_integration imu_integration.launch
 
 注意: 为了提升课程的区分度, 从本章开始, **优秀要求的难度会大幅提升, 框架的提示会越来越少**, 期待喜爱挑战的你的精彩发挥!
 
-此处推荐使用**GNSS-Ins-Sim**生成仿真数据, 也可以沿用基础框架的方法生成, 但为了胡后续学习考虑, 推荐**尽早开始熟悉GNSS-Ins-Sim的使用**.
+此处推荐使用**GNSS-Ins-Sim**生成仿真数据, 也可以沿用基础框架的方法生成, 但为了后续学习考虑, 推荐**尽早开始熟悉GNSS-Ins-Sim的使用**.
 
 为了方便你的学习， 此处已额外提供`gnss-ins-sim ROS wrapper package`. 使用它, 仅需更改配置文件, 即可得到ROS Bag格式的GNSS-Ins-Sim仿真数据. 
 
