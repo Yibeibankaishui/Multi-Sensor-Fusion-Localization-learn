@@ -23,14 +23,25 @@
 // 反对称算符
 Eigen::Matrix3d skew(Eigen::Vector3d& mat_in){
 	Eigen::Matrix<double,3,3> skew_mat;
-    skew_mat.setZero();
-    skew_mat(0,1) = -mat_in(2);
-    skew_mat(0,2) =  mat_in(1);
-    skew_mat(1,2) = -mat_in(0);
-    skew_mat(1,0) =  mat_in(2);
-    skew_mat(2,0) = -mat_in(1);
-    skew_mat(2,1) =  mat_in(0);
-    return skew_mat;
+  skew_mat.setZero();
+  skew_mat(0,1) = -mat_in(2);
+  skew_mat(0,2) =  mat_in(1);
+  skew_mat(1,2) = -mat_in(0);
+  skew_mat(1,0) =  mat_in(2);
+  skew_mat(2,0) = -mat_in(1);
+  skew_mat(2,1) =  mat_in(0);
+  return skew_mat;
+}
+
+
+// 逆反对称
+Eigen::Vector3d inv_skew(Eigen::Matrix3d& mat_in) {
+  Eigen::Vector3d inv_skew_vec;
+  inv_skew_vec.setZero();
+  inv_skew_vec(0) = mat_in(2, 1);
+  inv_skew_vec(1) = mat_in(0, 2);
+  inv_skew_vec(2) = mat_in(1, 0);
+  return inv_skew_vec;
 }
 
 
@@ -478,14 +489,33 @@ void ErrorStateKalmanFilter::UpdateOdomEstimation(
   // assignment
   //
   // get deltas:
+  size_t id_curr, id_prev;
+  Eigen::Vector3d angular_delta;
+  Eigen::Vector3d velocity_delta;
+  id_curr = imu_data_buff_.size() - 1;
+  id_prev = id_curr - 1;
 
+  if ( !(GetAngularDelta(id_curr, id_prev, angular_delta)) ){
+      return false;
+  }
   // update orientation:
-
+  Eigen::Matrix3d R_curr;
+  Eigen::Matrix3d R_prev;
+  UpdateOrientation(angular_delta, R_curr, R_prev);
   // get velocity delta:
-
-  // save mid-value unbiased linear acc for error-state update:
-
+  double delta_t;
+  if ( !(GetVelocityDelta(id_curr, id_prev, R_curr, R_prev, delta_t, velocity_delta)) ){
+      return false;
+  }
   // update position:
+  
+  // GetDelta_t(id_curr, id_prev, delta_t);
+  UpdatePosition(delta_t, velocity_delta);
+  // move forward -- 
+
+  // NOTE: this is NOT fixed. you should update your buffer according to the method of your choice:
+  imu_data_buff_.pop_front();
+
 }
 
 /**
@@ -552,6 +582,7 @@ void ErrorStateKalmanFilter::UpdateErrorEstimation(
 
   // TODO: perform Kalman prediction
   X_ = F_1st * X_;
+  P_ = F_1st * P_ * F_1st.transpose() + B_ * Q_ * B_.transpose();
 }
 
 /**
@@ -565,12 +596,22 @@ void ErrorStateKalmanFilter::CorrectErrorEstimationPose(
   //
   // TODO: set measurement:
   //
-  Y = ;
+  Eigen::Vector3d translation_lidar = T_nb.block<3, 1>(0, 3);
+  Eigen::Vector3d translation_imu = pose_.block<3, 1>(0, 3);
+  Eigen::Vector3d delta_translation = translation_imu - translation_lidar;
+
+  Eigen::Matrix3d rotation_lidar = T_nb.block<3, 3>(0, 0);
+  Eigen::Matrix3d rotation_imu = pose_.block<3, 3>(0, 0);
+  Eigen::Matrix3d delta_rotation = rotation_lidar.transpose() * rotation_imu;
+  Eigen::Vector3d delta_theta = inv_skew(delta_rotation - Eigen::Matrix3d::Identity());
+  // Y should be <6, 1>
+  Y.block<3, 1>(0, 0) = delta_translation;
+  Y.block<3, 1>(3, 0) = delta_theta;
   // TODO: set measurement equation:
-  G = ;
-  CPose_ = ;
+  G = GPose_;
   // TODO: set Kalman gain:   
-  K_ = 
+  K = P_ * G.transpose() * 
+    ((G * P_ * G.transpose() + CPose_ * RPose_ * CPose_.transpose()).inverse());
 }
 
 /**
@@ -595,6 +636,11 @@ void ErrorStateKalmanFilter::CorrectErrorEstimation(
   }
 
   // TODO: perform Kalman correct:
+  YPose_ = Y;
+  GPose_ = G;
+  
+  P_ = (Eigen::Matrix3d::Identity() - K * G) * P_;
+  X_ = X_ + K * (Y - G * X_);
 }
 
 /**
@@ -608,10 +654,13 @@ void ErrorStateKalmanFilter::EliminateError(void) {
   //
   // a. position:
   // do it!
+  pose_.block<3, 1>(0, 3) = pose_.block<3, 1>(0, 3) - X_.block<3, 1>(kIndexErrorPos, 0);
   // b. velocity:
   // do it!
+  vel_ = vel_ - X_.block<3, 1>(kIndexErrorVel, 0);
   // c. orientation:
   // do it!
+  pose_.block<3, 3>(0, 0) = pose_.block<3, 3>(0, 0) * (Eigen::Matrix3d::Identity() - skew(X_.block<3, 1>(kIndexErrorOri, 0)));
 
   // d. gyro bias:
   if (IsCovStable(kIndexErrorGyro)) {

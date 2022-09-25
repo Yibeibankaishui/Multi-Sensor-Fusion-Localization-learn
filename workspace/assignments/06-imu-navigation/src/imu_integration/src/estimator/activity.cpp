@@ -57,7 +57,7 @@ void Activity::Init(void) {
     private_nh_.param("pose/topic_name/ground_truth", odom_config_.topic_name.ground_truth, std::string("/pose/ground_truth"));
     private_nh_.param("pose/topic_name/estimation", odom_config_.topic_name.estimation, std::string("/pose/estimation"));
 
-    private_nh_.param("solve_method", odom_config_.solve_method, std::string("mid"));
+    private_nh_.param("solve_method", odom_config_.solve_method, std::string("euler"));
 
     odom_ground_truth_sub_ptr = std::make_shared<OdomSubscriber>(private_nh_, odom_config_.topic_name.ground_truth, 1000000);
     odom_estimation_pub_ = private_nh_.advertise<nav_msgs::Odometry>(odom_config_.topic_name.estimation, 500);
@@ -127,16 +127,22 @@ bool Activity::UpdatePose(void) {
         //
         // TODO: implement your estimation here
         //
+
         // get deltas:
         size_t id_curr, id_prev;
         Eigen::Vector3d angular_delta;
         Eigen::Vector3d velocity_delta;
-        id_curr = imu_data_buff_.size() - 1;
-        id_prev = id_curr - 1;
+        // id_curr = imu_data_buff_.size() - 1;
+        // id_prev = id_curr - 2;
+   
+        id_curr = 1;
+        id_prev = 0;
     
         if ( !(GetAngularDelta(id_curr, id_prev, angular_delta)) ){
+            std::cout << "ERROR: GetAngularDelta" << std::endl;
             return false;
         }
+
         // update orientation:
         Eigen::Matrix3d R_curr;
         Eigen::Matrix3d R_prev;
@@ -144,11 +150,10 @@ bool Activity::UpdatePose(void) {
         // get velocity delta:
         double delta_t;
         if ( !(GetVelocityDelta(id_curr, id_prev, R_curr, R_prev, delta_t, velocity_delta)) ){
+            std::cout << "ERROR: GetVelocityDelta" << std::endl;
             return false;
         }
         // update position:
-        
-        // GetDelta_t(id_curr, id_prev, delta_t);
         UpdatePosition(delta_t, velocity_delta);
         // move forward -- 
 

@@ -167,7 +167,7 @@ class MultiPosAccCostFunction : public ceres::SizedCostFunction <1, 9> {
       double A_minus_b_times_K_z = (raw_samp(2) - calib_triad.biasZ()) * calib_triad.scaleZ();
  
       // error = || g || - || a ||
-      residuals[0] = double (g_mag_) - calib_samp.norm();
+      residuals[0] = double (g_mag_) * double (g_mag_) - calib_samp.norm() * calib_samp.norm();
 
       if (jacobians != NULL && jacobians[0] != NULL) {
         // TODO : need to test
