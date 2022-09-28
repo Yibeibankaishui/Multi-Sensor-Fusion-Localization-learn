@@ -492,8 +492,8 @@ void ErrorStateKalmanFilter::UpdateOdomEstimation(
   size_t id_curr, id_prev;
   Eigen::Vector3d angular_delta;
   Eigen::Vector3d velocity_delta;
-  id_curr = imu_data_buff_.size() - 1;
-  id_prev = id_curr - 1;
+  id_curr = 1;
+  id_prev = 0;
 
   if ( !(GetAngularDelta(id_curr, id_prev, angular_delta)) ){
       return false;
@@ -550,7 +550,7 @@ void ErrorStateKalmanFilter::UpdateProcessEquation(
     const Eigen::Vector3d &angular_vel_mid) {
   // set linearization point:
   Eigen::Matrix3d C_nb = pose_.block<3, 3>(0, 0);
-  Eigen::Vector3d f_n = linear_acc_mid + g_;
+  Eigen::Vector3d f_n = C_nb.transpose() * (linear_acc_mid + g_); // may be changed ?
   Eigen::Vector3d w_b = angular_vel_mid;
 
   // set process equation:
